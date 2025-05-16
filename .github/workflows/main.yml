@@ -27,9 +27,6 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
       - name: Debug - Affiche le chemin et le contenu du workspace
         run: |
           pwd
@@ -45,9 +42,9 @@ jobs:
 
       - name: Install dependencies, lint and typecheck
         run: |
-          pnpm install --frozen-lockfile
-          pnpm run lint || true
-          pnpm run typecheck || echo "Type checking skipped"
+          npm ci
+          npm run lint || true
+          npm run typecheck || echo "Type checking skipped"
 
       - name: Build Docker image
         run: docker build -t dcat-frontend-ecommerce:${{ github.sha }} .
@@ -63,7 +60,7 @@ jobs:
           docker run -d --name dcat-frontend-ecommerce \
             -p 9000:9000 \
             --restart unless-stopped \
-            dcat-frontend:${{ github.sha }}
+            dcat-frontend-ecommerce:${{ github.sha }}
 
       - name: Clean up old images
         run: |
