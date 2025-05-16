@@ -31,7 +31,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 # Exposer le port utilisé dans nginx.conf (par défaut 80, sinon adapter ici)
-EXPOSE 9000
+EXPOSE 9090
 
 # Démarrer nginx
 CMD ["nginx", "-g", "daemon off;"]
