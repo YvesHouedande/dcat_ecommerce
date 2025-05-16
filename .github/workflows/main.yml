@@ -37,7 +37,7 @@ jobs:
 
       - name: Update .env for the current environment
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "# Keycloak settings" > .env
             echo "VITE_API_URL=${{ secrets.API_URL || 'http://localhost:2000/api' }}" >> .env
             echo "VITE_ENV=development" >> .env
