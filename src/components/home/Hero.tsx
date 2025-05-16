@@ -26,7 +26,7 @@ const Hero: React.FC = () => {
             à votre vision créative
           </p>
           <div className="flex flex-wrap gap-4">
-            <Link to="/catalog" className="btn-secondary px-8 py-3">
+            <Link to="/catalog" className="btn-primary px-8 py-3">
               Voir la collection
             </Link>
             <Link

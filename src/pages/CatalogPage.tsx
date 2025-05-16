@@ -1,137 +1,112 @@
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
-import ProductCard from "../components/ui/ProductCard";
-import { productData } from "../data/products";
-import { Product } from "../types/product";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Filter, X, ChevronDown } from 'lucide-react';
+import ProductCard from '../components/ui/ProductCard';
+import { stocksApi } from '../api/stocks';
+import { Product, Famille, Marque } from '../types/product';
 
 const CatalogPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [familles, setFamilles] = useState<Famille[]>([]);
+  const [marques, setMarques] = useState<Marque[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Filter states
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    0, 100000000,
-  ]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortOption, setSortOption] = useState("featured");
+  const [sortOption, setSortOption] = useState('featured');
 
-  // Get unique categories and brands
-  const categories = [...new Set(productData.map((p) => p.category))];
-  const brands = [...new Set(productData.map((p) => p.brand))];
-
-  // Initialize from URL params
+  // Fetch data
   useEffect(() => {
-    document.title = "Shop Audio Equipment - DCAT Shop";
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        document.title = "Catalogue Produits - DCAT Shop";
 
-    const category = searchParams.get("category");
-    const brand = searchParams.get("brand");
-    const search = searchParams.get("search");
+        const [productsData, famillesData, marquesData] = await Promise.all([
+          stocksApi.getProducts(),
+          stocksApi.getFamilles(),
+          stocksApi.getMarques()
+        ]);
 
-    // Réinitialise tous les filtres
-    setSelectedCategories(category ? [category] : []);
-    setSelectedBrands(brand ? [brand] : []);
-    setPriceRange([0, 100000000]);
-    setInStockOnly(false);
+        setProducts(productsData);
+        setFamilles(famillesData);
+        setMarques(marquesData);
+        setFilteredProducts(productsData);
 
-    if (search) {
-      // Filtre par recherche uniquement
-      const filtered = productData.filter(
-        (product) =>
-          product.name.toLowerCase().includes(search.toLowerCase()) ||
-          product.description.toLowerCase().includes(search.toLowerCase()) ||
-          product.category.toLowerCase().includes(search.toLowerCase())
-      );
-      setProducts(filtered);
-    } else {
-      setProducts(productData);
-    }
+        // Initialize from URL params
+        const category = searchParams.get('category');
+        const brand = searchParams.get('brand');
+        
+        if (category) setSelectedCategories([category]);
+        if (brand) setSelectedBrands([brand]);
+      } catch (err) {
+        setError('Erreur lors du chargement des données');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [searchParams]);
 
   // Apply filters
   useEffect(() => {
-    let results = [...products];
+    if (products.length === 0) return;
 
-    // Category filter
-    if (selectedCategories.length > 0) {
-      results = results.filter((product) =>
-        selectedCategories.some(
-          (cat) => cat.toLowerCase() === product.category.toLowerCase()
-        )
-      );
-    }
+    let results = products.filter(product => {
+      // Category filter
+      const categoryMatch = selectedCategories.length === 0 || 
+        selectedCategories.includes(product.id_famille.toString());
+      
+      // Brand filter
+      const brandMatch = selectedBrands.length === 0 ||
+        selectedBrands.includes(product.id_marque.toString());
+      
+      // Price filter
+      const price = parseFloat(product.prix_produit);
+      const priceMatch = price >= priceRange[0] && price <= priceRange[1];
+      
+      // Stock filter
+      const stockMatch = !inStockOnly || product.qte_produit > 0;
+      
+      return categoryMatch && brandMatch && priceMatch && stockMatch;
+    });
 
-    // Brand filter
-    if (selectedBrands.length > 0) {
-      results = results.filter((product) =>
-        selectedBrands.includes(product.brand)
-      );
-    }
-
-    // Price range filter
-    results = results.filter(
-      (product) =>
-        product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
-
-    // In stock filter
-    if (inStockOnly) {
-      results = results.filter((product) => product.inStock);
-    }
-
-    // Sort
-    switch (sortOption) {
-      case "price-asc":
-        results.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        results.sort((a, b) => b.price - a.price);
-        break;
-      case "newest":
-        results.sort(
-          (a, b) =>
-            new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
-        );
-        break;
-      case "rating":
-        results.sort((a, b) => b.rating - a.rating);
-        break;
-      default: // featured
-        results.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-    }
+    // Sorting
+    results.sort((a, b) => {
+      const priceA = parseFloat(a.prix_produit);
+      const priceB = parseFloat(b.prix_produit);
+      
+      switch (sortOption) {
+        case 'price-asc': return priceA - priceB;
+        case 'price-desc': return priceB - priceA;
+        case 'newest': 
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        default: return 0;
+      }
+    });
 
     setFilteredProducts(results);
-  }, [
-    products,
-    selectedCategories,
-    selectedBrands,
-    priceRange,
-    inStockOnly,
-    sortOption,
-  ]);
+  }, [products, selectedCategories, selectedBrands, priceRange, inStockOnly, sortOption]);
 
-  // Toggle category selection
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category]
+  const toggleCategory = (id: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     );
   };
 
-  // Toggle brand selection
-  const toggleBrand = (brand: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+  const toggleBrand = (id: string) => {
+    setSelectedBrands(prev => 
+      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
     );
-  };
-
-  const handlePriceChange = (min: number, max: number) => {
-    setPriceRange([min, max]);
   };
 
   const clearFilters = () => {
@@ -141,11 +116,29 @@ const CatalogPage: React.FC = () => {
     setInStockOnly(false);
   };
 
+  if (loading) {
+    return (
+      <div className="container py-8 md:py-12">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-8 md:py-12">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-8 md:py-12">
-      <h1 className="text-3xl font-serif font-bold mb-8">
-        Parcourez les équipements
-      </h1>
+      <h1 className="text-3xl font-serif font-bold mb-8">Notre Catalogue</h1>
 
       {/* Mobile filter toggle */}
       <div className="flex md:hidden justify-between items-center mb-6">
@@ -154,7 +147,7 @@ const CatalogPage: React.FC = () => {
           className="flex items-center space-x-2 border border-slate-300 rounded-md px-4 py-2"
         >
           <Filter className="h-4 w-4" />
-          <span>Filtre</span>
+          <span>Filtres</span>
         </button>
 
         <div className="relative">
@@ -163,11 +156,10 @@ const CatalogPage: React.FC = () => {
             onChange={(e) => setSortOption(e.target.value)}
             className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
-            <option value="price-asc">Prix​: du plus bas</option>
-            <option value="price-desc">
-              Prix​​: du plus élevé
-            </option>
-            <option value="newest">Le plus récent</option>
+            <option value="featured">Recommandés</option>
+            <option value="price-asc">Prix : croissant</option>
+            <option value="price-desc">Prix : décroissant</option>
+            <option value="newest">Nouveautés</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
         </div>
@@ -175,11 +167,7 @@ const CatalogPage: React.FC = () => {
 
       <div className="flex flex-col md:flex-row md:space-x-8">
         {/* Filters - Sidebar */}
-        <aside
-          className={`md:w-64 flex-shrink-0 pb-6 md:pb-0 ${
-            isFilterOpen ? "block" : "hidden"
-          } md:block`}
-        >
+        <aside className={`md:w-64 flex-shrink-0 pb-6 md:pb-0 ${isFilterOpen ? 'block' : 'hidden'} md:block`}>
           <div className="sticky top-20 space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-medium">Filtres</h2>
@@ -193,17 +181,17 @@ const CatalogPage: React.FC = () => {
 
             {/* Categories */}
             <div className="border-b border-slate-200 pb-6">
-              <h3 className="font-medium mb-4">Categories</h3>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <label key={category} className="flex items-center">
+              <h3 className="font-medium mb-4">Catégories</h3>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {familles.map((famille) => (
+                  <label key={famille.id_famille} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={selectedCategories.includes(category)}
-                      onChange={() => toggleCategory(category)}
+                      checked={selectedCategories.includes(famille.id_famille.toString())}
+                      onChange={() => toggleCategory(famille.id_famille.toString())}
                       className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                     />
-                    <span className="ml-2 text-slate-700">{category}</span>
+                    <span className="ml-2 text-slate-700">{famille.libelle_famille}</span>
                   </label>
                 ))}
               </div>
@@ -217,51 +205,35 @@ const CatalogPage: React.FC = () => {
                   <input
                     type="number"
                     min="0"
-                    max={priceRange[1]}
                     value={priceRange[0]}
-                    onChange={(e) =>
-                      handlePriceChange(Number(e.target.value), priceRange[1])
-                    }
-                    className="w-full rounded border-slate-300 focus:ring-amber-500 focus:border-amber-500"
+                    onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                    className="w-full rounded border-slate-300 focus:ring-amber-500"
                   />
                   <span className="text-slate-500">à</span>
                   <input
                     type="number"
                     min={priceRange[0]}
-                    max="100000000"
                     value={priceRange[1]}
-                    onChange={(e) =>
-                      handlePriceChange(priceRange[0], Number(e.target.value))
-                    }
-                    className="w-full rounded border-slate-300 focus:ring-amber-500 focus:border-amber-500"
+                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                    className="w-full rounded border-slate-300 focus:ring-amber-500"
                   />
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10000000"
-                  value={priceRange[1]}
-                  onChange={(e) =>
-                    handlePriceChange(priceRange[0], Number(e.target.value))
-                  }
-                  className="w-full"
-                />
               </div>
             </div>
 
             {/* Brands */}
             <div className="border-b border-slate-200 pb-6">
               <h3 className="font-medium mb-4">Marques</h3>
-              <div className="space-y-2">
-                {brands.map((brand) => (
-                  <label key={brand} className="flex items-center">
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {marques.map((marque) => (
+                  <label key={marque.id_marque} className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={selectedBrands.includes(brand)}
-                      onChange={() => toggleBrand(brand)}
+                      checked={selectedBrands.includes(marque.id_marque.toString())}
+                      onChange={() => toggleBrand(marque.id_marque.toString())}
                       className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                     />
-                    <span className="ml-2 text-slate-700">{brand}</span>
+                    <span className="ml-2 text-slate-700">{marque.libelle_marque}</span>
                   </label>
                 ))}
               </div>
@@ -285,13 +257,11 @@ const CatalogPage: React.FC = () => {
 
         {/* Main Content */}
         <div className="flex-1">
-          {/* Sort - Desktop */}
+          {/* Desktop sort */}
           <div className="hidden md:flex justify-between items-center mb-6">
             <p className="text-slate-600">
-              {filteredProducts.length}{" "}
-              {filteredProducts.length === 1 ? "produit" : "produits"}
+              {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''}
             </p>
-
             <div className="flex items-center space-x-2">
               <span className="text-slate-600">Trier par:</span>
               <div className="relative">
@@ -300,9 +270,10 @@ const CatalogPage: React.FC = () => {
                   onChange={(e) => setSortOption(e.target.value)}
                   className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <option value="price-asc">Prix​: du plus bas</option>
-                  <option value="price-desc">Prix​​: du plus élevé</option>
-                  <option value="newest">Le plus récent</option>
+                  <option value="featured">Recommandés</option>
+                  <option value="price-asc">Prix : croissant</option>
+                  <option value="price-desc">Prix : décroissant</option>
+                  <option value="newest">Nouveautés</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
               </div>
@@ -313,7 +284,19 @@ const CatalogPage: React.FC = () => {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id_produit}
+                  product={{
+                    id: product.id_produit,
+                    name: product.desi_produit,
+                    description: product.desc_produit,
+                    price: parseFloat(product.prix_produit),
+                    imageUrl: product.image_url,
+                    inStock: product.qte_produit > 0,
+                    features: product.caracteristiques_produit,
+                    code: product.code_produit
+                  }}
+                />
               ))}
             </div>
           ) : (
@@ -321,7 +304,10 @@ const CatalogPage: React.FC = () => {
               <p className="text-slate-600 mb-4">
                 Aucun produit ne correspond à vos filtres.
               </p>
-              <button onClick={clearFilters} className="btn-primary">
+              <button
+                onClick={clearFilters}
+                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-md"
+              >
                 Effacer les filtres
               </button>
             </div>

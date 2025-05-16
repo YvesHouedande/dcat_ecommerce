@@ -57,8 +57,12 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Headphones className="h-8 w-8 text-amber-500" />
-            <span className="text-2xl font-serif font-bold">DCAT Shop</span>
+            <img 
+              src="/logo.png" 
+              alt="DCAT Shop Logo" 
+              className="h-8 w-auto" // Ajustez la taille selon vos besoins
+            />
+            <span className="text-2xl font-serif font-bold">E-Shop</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -67,13 +71,13 @@ const Header: React.FC = () => {
               to="/"
               className="text-slate-800 hover:text-amber-500 transition-colors"
             >
-              Home
+              Accueil
             </Link>
             <Link
               to="/catalog"
               className="text-slate-800 hover:text-amber-500 transition-colors"
             >
-              Boutique
+              Nos Produits
             </Link>
             <Link
               to="/catalog?category=microphones"

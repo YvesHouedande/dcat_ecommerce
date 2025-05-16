@@ -1,10 +1,49 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+// // import { defineConfig } from 'vite';
+// // import react from '@vitejs/plugin-react';
 
-// https://vitejs.dev/config/
+// // // https://vitejs.dev/config/
+// // export default defineConfig({
+// //   plugins: [react()],
+// //   optimizeDeps: {
+// //     exclude: ['lucide-react'],
+// //   },
+// // });
+
+
+// import { defineConfig } from 'vite'
+// import react from '@vitejs/plugin-react'
+
+// export default defineConfig({
+//   plugins: [react()],
+//   server: {
+//     proxy: {
+//       '/api': {
+//         target: 'https://erpback.dcat.ci',
+//         changeOrigin: true,
+//         rewrite: (path) => path.replace(/^\/api/, ''),
+//       }
+//     }
+//   }
+// })
+
+
+
+
+import path from "path"
+// import tailwindcss from "@tailwindcss/vite"
+import { defineConfig } from 'vite'
+// import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
+  // plugins: [react(), tailwindcss()],
+  server: {
+    host: '0.0.0.0', // Écouter sur toutes les interfaces réseau
+    port: 9000,      // Port du serveur de développement
   },
-});
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})

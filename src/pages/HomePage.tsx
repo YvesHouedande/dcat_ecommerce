@@ -3,6 +3,7 @@ import Hero from '../components/home/Hero';
 import CategoryGrid from '../components/home/CategoryGrid';
 import FeaturedProducts from '../components/home/FeaturedProducts';
 import PromoSection from '../components/home/PromoSection';
+import BenefitsSection from '../components/home/BenefitsSection';
 
 const HomePage: React.FC = () => {
   useEffect(() => {
@@ -12,6 +13,7 @@ const HomePage: React.FC = () => {
   return (
     <div>
       <Hero />
+      <BenefitsSection />
       <CategoryGrid />
       <FeaturedProducts />
       <PromoSection />

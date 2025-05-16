@@ -1,125 +1,346 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
+// interface User {
+//   id: string;
+//   name: string;
+//   email: string;
+// }
+
+// interface AuthContextType {
+//   user: User | null;
+//   isAuthenticated: boolean;
+//   login: (email: string, password: string) => Promise<void>;
+//   register: (name: string, email: string, password: string) => Promise<void>;
+//   logout: () => void;
+//   loading: boolean;
+//   error: string | null;
+//   resetError: () => void;
+// }
+
+// const AuthContext = createContext<AuthContextType>({
+//   user: null,
+//   isAuthenticated: false,
+//   login: async () => {},
+//   register: async () => {},
+//   logout: () => {},
+//   loading: false,
+//   error: null,
+//   resetError: () => {}
+// });
+
+// export const useAuth = () => useContext(AuthContext);
+
+// export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+//   const [user, setUser] = useState<User | null>(() => {
+//     const savedUser = localStorage.getItem('user');
+//     return savedUser ? JSON.parse(savedUser) : null;
+//   });
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     if (user) {
+//       localStorage.setItem('user', JSON.stringify(user));
+//     } else {
+//       localStorage.removeItem('user');
+//     }
+//   }, [user]);
+
+//   // Mock login functionality
+//   const login = async (email: string, password: string) => {
+//     setLoading(true);
+//     setError(null);
+    
+//     try {
+//       // Simulate API call
+//       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+//       // Mock validation
+//       if (email === 'demo@example.com' && password === 'password') {
+//         setUser({
+//           id: '1',
+//           name: 'Demo User',
+//           email: 'demo@example.com'
+//         });
+//       } else {
+//         throw new Error('Invalid email or password');
+//       }
+//     } catch (err) {
+//       setError((err as Error).message);
+//       throw err;
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Mock register functionality
+//   const register = async (name: string, email: string, password: string) => {
+//     setLoading(true);
+//     setError(null);
+    
+//     try {
+//       // Simulate API call
+//       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+//       // Mock validation
+//       if (email === 'demo@example.com') {
+//         throw new Error('Email already in use');
+//       }
+      
+//       setUser({
+//         id: Date.now().toString(),
+//         name,
+//         email
+//       });
+//     } catch (err) {
+//       setError((err as Error).message);
+//       throw err;
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const logout = () => {
+//     setUser(null);
+//   };
+
+//   const resetError = () => {
+//     setError(null);
+//   };
+
+//   return (
+//     <AuthContext.Provider value={{
+//       user,
+//       isAuthenticated: !!user,
+//       login,
+//       register,
+//       logout,
+//       loading,
+//       error,
+//       resetError
+//     }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// };
+
+
+
+
+
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { 
+  User, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  UserCredential
+} from 'firebase/auth';
+import { auth } from '../firebase/firebase';
+import axios from 'axios'; // Assurez-vous d'installer axios
+
+// Interface pour les données utilisateur
+interface UserData {
+  uid: string;
+  email: string | null;
+  nom: string | null;
+  contact?: string | null;
+  photoURL?: string | null;
+  provider: string; // 'email' ou 'google'
 }
 
+// Types pour notre contexte d'authentification
 interface AuthContextType {
-  user: User | null;
+  currentUser: User | null;
+  userData: UserData | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<UserCredential>;
+  register: (email: string, password: string, nom: string, contact: string) => Promise<void>;
+  logout: () => Promise<void>;
+  signInWithGoogle: () => Promise<UserCredential>;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  loading: boolean;
-  error: string | null;
-  resetError: () => void;
+  updateUserProfile: (data: Partial<UserData>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  login: async () => {},
-  register: async () => {},
-  logout: () => {},
-  loading: false,
-  error: null,
-  resetError: () => {}
-});
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export const useAuth = () => useContext(AuthContext);
+// Créer le contexte
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Hook personnalisé
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
+// URL de l'API backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-  // Mock login functionality
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    
+// Fournisseur du contexte
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Synchroniser l'utilisateur avec le backend
+  const syncUserWithBackend = async (user: User, additionalData?: { nom?: string, contact?: string }) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock validation
-      if (email === 'demo@example.com' && password === 'password') {
-        setUser({
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com'
-        });
-      } else {
-        throw new Error('Invalid email or password');
-      }
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+      // Récupérer le token d'authentification
+      const token = await user.getIdToken();
 
-  // Mock register functionality
-  const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock validation
-      if (email === 'demo@example.com') {
-        throw new Error('Email already in use');
-      }
-      
-      setUser({
-        id: Date.now().toString(),
-        name,
-        email
+      // Préparer les données utilisateur
+      const userData: UserData = {
+        uid: user.uid,
+        email: user.email,
+        nom: user.displayName || additionalData?.nom || null,
+        contact: user.phoneNumber || additionalData?.contact || null,
+        photoURL: user.photoURL,
+        provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 'email'
+      };
+
+      // Envoyer les données au backend
+      const response = await axios.post(`${API_URL}/auth/sync-user`, userData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    } finally {
-      setLoading(false);
+
+      // Mettre à jour l'état local avec les données du backend
+      setUserData(response.data.user);
+      
+      return response.data.user;
+    } catch (error) {
+      console.error('Erreur lors de la synchronisation avec le backend:', error);
+      throw error;
     }
   };
 
-  const logout = () => {
-    setUser(null);
+  // Écouter les changements d'état d'authentification
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      
+      if (user) {
+        try {
+          // Synchroniser l'utilisateur avec le backend à chaque connexion
+          await syncUserWithBackend(user);
+        } catch (error) {
+          console.error("Erreur lors de la synchronisation initiale:", error);
+        }
+      } else {
+        setUserData(null);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Fonction de connexion avec email/mot de passe
+  const login = async (email: string, password: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    await syncUserWithBackend(userCredential.user);
+    return userCredential;
   };
 
-  const resetError = () => {
-    setError(null);
+  // Fonction d'inscription avec email/mot de passe
+  const register = async (email: string, password: string, nom: string, contact: string) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Mettre à jour le profil avec le nom
+      await updateProfile(userCredential.user, {
+        displayName: nom
+      });
+      
+      // Synchroniser avec le backend, en incluant le contact
+      await syncUserWithBackend(userCredential.user, { nom, contact });
+      
+      return userCredential;
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error);
+      throw error;
+    }
   };
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated: !!user,
-      login,
-      register,
-      logout,
-      loading,
-      error,
-      resetError
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  // Fonction de connexion avec Google
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    // Demander l'accès à l'email et au profil
+    provider.addScope('email');
+    provider.addScope('profile');
+    
+    const userCredential = await signInWithPopup(auth, provider);
+    
+    // Récupérer les informations supplémentaires de Google
+    const user = userCredential.user;
+    
+    // Extraire des informations supplémentaires si disponibles
+    // Note: Google ne fournit pas le numéro de téléphone par défaut
+    // donc nous devrons peut-être le demander séparément
+    await syncUserWithBackend(user);
+    
+    return userCredential;
+  };
+
+  // Fonction pour mettre à jour le profil utilisateur
+  const updateUserProfile = async (data: Partial<UserData>) => {
+    if (!currentUser) throw new Error('Aucun utilisateur connecté');
+    
+    try {
+      const token = await currentUser.getIdToken();
+      
+      // Si nous mettons à jour le nom d'affichage, mettre à jour Firebase Auth aussi
+      if (data.nom) {
+        await updateProfile(currentUser, {
+          displayName: data.nom
+        });
+      }
+      
+      // Envoyer la mise à jour au backend
+      const response = await axios.put(`${API_URL}/auth/update-profile`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setUserData(prev => prev ? { ...prev, ...data } : null);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      throw error;
+    }
+  };
+
+  // Fonction de déconnexion
+  const logout = async () => {
+    await signOut(auth);
+    setUserData(null);
+  };
+
+  // Valeur du contexte
+  const value = {
+    currentUser,
+    userData,
+    isLoading,
+    login,
+    register,
+    logout,
+    signInWithGoogle,
+    isAuthenticated: currentUser !== null,
+    updateUserProfile
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}

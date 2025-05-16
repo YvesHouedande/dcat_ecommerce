@@ -1,23 +1,29 @@
 export interface Product {
-  id: string;
-  name: string;
-  category: string;
-  brand: string;
-  price: number;
-  discount: number;
-  image: string;
-  imageLarge?: string;
-  additionalImages?: string[];
-  rating: number;
-  reviews: number;
-  inStock: boolean;
-  featured: boolean;
-  shortDescription: string;
-  description: string;
-  features: string[];
-  specifications: {
-    name: string;
-    value: string;
-  }[];
-  dateAdded: string;
+  id_produit: number;
+  code_produit: string;
+  desi_produit: string;
+  desc_produit: string;
+  image_produit: string | null;
+  image_url: string | null;
+  qte_produit: number;
+  prix_produit: string;
+  id_famille: number;
+  id_marque: number;
+  caracteristiques_produit: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Famille {
+  id_famille: number;
+  libelle_famille: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Marque {
+  id_marque: number;
+  libelle_marque: string | null;
+  created_at: string;
+  updated_at: string;
 }
