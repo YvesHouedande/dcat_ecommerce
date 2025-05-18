@@ -1,3 +1,74 @@
+# name: Frontend-Ecommerce CI/CD Pipeline
+
+# on:
+#   push:
+#     branches: [main]
+#   workflow_dispatch:
+
+# jobs:
+#   build-and-deploy:
+#     runs-on: self-hosted
+#     if: contains(github.event.head_commit.message, '[deploy]') || github.event_name == 'workflow_dispatch'
+    
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Show deployment reason
+#         run: |
+#           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+#             echo "Deploying due to manual workflow trigger"
+#           else
+#             echo "Deploying based on commit message: ${{ github.event.head_commit.message }}"
+#           fi
+
+#       - name: Setup Node.js (v18)
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+
+#       - name: Debug - Affiche le chemin et le contenu du workspace
+#         run: |
+#           pwd
+#           ls -la
+
+#       - name: Update .env for the current environment
+#         run: |
+#           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+#             echo "# Keycloak settings" > .env
+#             echo "VITE_API_URL=${{ secrets.API_URL || 'http://localhost:2000/api' }}" >> .env
+#             echo "VITE_ENV=development" >> .env
+#           fi
+
+#       - name: Install dependencies, lint and typecheck
+#         run: |
+#           npm ci
+#           npm run lint || true
+#           npm run typecheck || echo "Type checking skipped"
+
+#       - name: Build Docker image
+#         run: docker build -t dcat-frontend-ecommerce:${{ github.sha }} .
+
+#       - name: Stop existing container
+#         run: |
+#           docker stop dcat-frontend-ecommerce || true
+#           docker rm dcat-frontend-ecommerce || true
+#         continue-on-error: true
+
+#       - name: Start new container
+#         run: |
+#           docker run -d --name dcat-frontend-ecommerce \
+#             -p 9090:9090 \
+#             --restart unless-stopped \
+#             dcat-frontend-ecommerce:${{ github.sha }}
+
+#       - name: Clean up old images
+#         run: |
+#           docker image prune -af --filter "until=24h"
+#         continue-on-error: true
+
+
+
 name: Frontend-Ecommerce CI/CD Pipeline
 
 on:
@@ -9,51 +80,35 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     if: contains(github.event.head_commit.message, '[deploy]') || github.event_name == 'workflow_dispatch'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Show deployment reason
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "Deploying due to manual workflow trigger"
-          else
-            echo "Deploying based on commit message: ${{ github.event.head_commit.message }}"
-          fi
-
-      - name: Setup Node.js (v18)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Debug - Affiche le chemin et le contenu du workspace
+      - name: Inject environment variables into .env
         run: |
-          pwd
-          ls -la
-
-      - name: Update .env for the current environment
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "# Keycloak settings" > .env
-            echo "VITE_API_URL=${{ secrets.API_URL || 'http://localhost:2000/api' }}" >> .env
-            echo "VITE_ENV=development" >> .env
-          fi
-
-      - name: Install dependencies, lint and typecheck
-        run: |
-          npm ci
-          npm run lint || true
-          npm run typecheck || echo "Type checking skipped"
+          echo "VITE_API_URL=${{ secrets.API_URL }}" > .env
+          echo "VITE_ENV=production" >> .env
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}" >> .env
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}" >> .env
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}" >> .env
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}" >> .env
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}" >> .env
+          echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}" >> .env
 
       - name: Build Docker image
         run: docker build -t dcat-frontend-ecommerce:${{ github.sha }} .
 
-      - name: Stop existing container
+      - name: Stop and remove existing container
         run: |
           docker stop dcat-frontend-ecommerce || true
           docker rm dcat-frontend-ecommerce || true
-        continue-on-error: true
 
       - name: Start new container
         run: |
@@ -63,6 +118,5 @@ jobs:
             dcat-frontend-ecommerce:${{ github.sha }}
 
       - name: Clean up old images
-        run: |
-          docker image prune -af --filter "until=24h"
+        run: docker image prune -af --filter "until=24h"
         continue-on-error: true
