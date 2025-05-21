@@ -62,7 +62,7 @@ const Header: React.FC = () => {
               alt="DCAT Shop Logo" 
               className="h-8 w-auto" // Ajustez la taille selon vos besoins
             />
-            <span className="text-2xl font-serif font-bold">E-Shop</span>
+            <span className="text-2xl font-serif font-bold">Shop</span>
           </Link>
 
           {/* Desktop Navigation */}

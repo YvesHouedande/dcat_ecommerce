@@ -45,7 +45,7 @@ export interface Product {
   };
   marque: {
     id_marque: number;
-    libelle_marque: string;
+    libelle_marque: string | null;
   };
   images: ProductImage[];
 }
