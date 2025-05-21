@@ -10,6 +10,7 @@ import AccountPage from './pages/AccountPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Layout from './components/layout/Layout';
 import HistoryCartPage from './pages/HistoryCartPage';
+import CheckoutPage from './pages/CheckoutPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="catalog" element={<CatalogPage />} />
         <Route path="produits/:id" element={<ProductPage />} />
         <Route path="cart" element={<CartPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
         <Route path="order/:id" element={<HistoryCartPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
