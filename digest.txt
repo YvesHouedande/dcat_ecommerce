@@ -617,102 +617,6 @@ File: src/vite-env.d.ts
 ================================================
 File: src/api/stocks.ts
 ================================================
-// import axios from 'axios';
-// import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
-
-// const API_URL = import.meta.env.VITE_API_URL;
-
-// export const stocksApi = {
-//   getProducts: async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<Product>> => {
-//     try {
-//       const response = await axios.get(`${API_URL}/api/stocks/produits`, {
-//         params: { page, limit }
-//       });
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error fetching products:', error);
-//       throw error;
-//     }
-//   },
-
-//   // Dans api/stocks.ts
-//   getProductById: async (id: number): Promise<Product> => {
-//     const response = await axios.get(`${API_URL}/api/stocks/produits/${id}`);
-//     return response.data;
-//   },
-
-//   getFamilles: async (): Promise<Famille[]> => {
-//     try {
-//       const response = await axios.get(`${API_URL}/api/stocks/familles`);
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error fetching families:', error);
-//       throw error;
-//     }
-//   },
-
-//   getMarques: async (): Promise<Marque[]> => {
-//     try {
-//       const response = await axios.get(`${API_URL}/api/stocks/marques`);
-//       return response.data;
-//     } catch (error) {
-//       console.error('Error fetching brands:', error);
-//       throw error;
-//     }
-//   },
-// };
-
-
-// // Dans api/stocks.ts
-// import axios from 'axios';
-// import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
-
-// const API_URL = import.meta.env.VITE_API_URL;
-// type ProductFilters = {
-//   page?: number;
-//   limit?: number;
-//   familleLibelle?: string;
-//   marqueLibelle?: string;
-// };
-
-// export const stocksApi = {
-//   getProducts: async (filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> => {
-//     try {
-//       const { page = 1, limit = 10, familleLibelle, marqueLibelle } = filters;
-
-//       const response = await axios.get(`${API_URL}/api/stocks/produits`, {
-//         params: {
-//           page,
-//           limit,
-//           ...(familleLibelle ? { familleLibelle } : {}),
-//           ...(marqueLibelle ? { marqueLibelle } : {})
-//         }
-//       });
-
-//       return response.data;
-//     } catch (error) {
-//       console.error('Erreur lors de la rÃ©cupÃ©ration des produits :', error);
-//       throw error;
-//     }
-//   },
-
-//   getProductById: async (id: number): Promise<Product> => {
-//     const response = await axios.get(`${API_URL}/api/stocks/produits/${id}`);
-//     return response.data;
-//   },
-
-//   getFamilles: async (): Promise<Famille[]> => {
-//     const response = await axios.get(`${API_URL}/api/stocks/familles`);
-//     return response.data;
-//   },
-
-//   getMarques: async (): Promise<Marque[]> => {
-//     const response = await axios.get(`${API_URL}/api/stocks/marques`);
-//     return response.data;
-//   },
-// };
-
-
 import axios from 'axios';
 import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
 
@@ -721,53 +625,69 @@ const API_URL = import.meta.env.VITE_API_URL;
 interface ProductFilters {
   page?: number;
   limit?: number;
-  minPrice?: number;
-  maxPrice?: number;
-  familles?: string; // comma-separated ids
-  marques?: string; // comma-separated ids
+  prixMin?: number;
+  prixMax?: number;
+  familleLibelle?: string;
+  marqueLibelle?: string;
   inStockOnly?: boolean;
-  sort?: string; // 'newest', 'price-asc', 'price-desc'
+  sortBy?: 'updated_at' | 'prix_produit';
+  sortOrder?: 'asc' | 'desc';
+  exclude?: string;
 }
 
 export const stocksApi = {
-  getProducts: async (filters: ProductFilters): Promise<PaginatedResponse<Product>> => {
+  getProducts: async (filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> => {
     try {
-      const params: Record<string, string> = {
-        page: filters.page?.toString() || '1',
-        limit: filters.limit?.toString() || '10'
+      const params: Record<string, any> = {
+        page: filters.page || 1,
+        limit: filters.limit || 10,
       };
 
-      if (filters.minPrice) params.minPrice = filters.minPrice.toString();
-      if (filters.maxPrice) params.maxPrice = filters.maxPrice.toString();
-      if (filters.familles) params.familles = filters.familles;
-      if (filters.marques) params.marques = filters.marques;
-      if (filters.inStockOnly) params.inStockOnly = 'true';
-      if (filters.sort) params.sort = filters.sort;
+      if (filters.prixMin !== undefined) params.prixMin = filters.prixMin;
+      if (filters.prixMax !== undefined) params.prixMax = filters.prixMax;
+      if (filters.familleLibelle) params.familleLibelle = filters.familleLibelle;
+      if (filters.marqueLibelle) params.marqueLibelle = filters.marqueLibelle;
+      if (filters.inStockOnly) params.inStockOnly = true;
+      if (filters.sortBy) params.sortBy = filters.sortBy;
+      if (filters.sortOrder) params.sortOrder = filters.sortOrder;
+      if (filters.exclude) params.exclude = filters.exclude;
 
-      const response = await axios.get(`${API_URL}/api/stocks/produits`, {
-        params
-      });
-
+      const response = await axios.get(`${API_URL}/api/stocks/produits`, { params });
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la rÃ©cupÃ©ration des produits :', error);
+      console.error('Error fetching products:', error);
       throw error;
     }
   },
 
   getProductById: async (id: number): Promise<Product> => {
-    const response = await axios.get(`${API_URL}/api/stocks/produits/${id}`);
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/api/stocks/produits/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching product ${id}:`, error);
+      throw error;
+    }
   },
 
   getFamilles: async (): Promise<Famille[]> => {
-    const response = await axios.get(`${API_URL}/api/stocks/familles`);
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/api/stocks/familles`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching familles:', error);
+      throw error;
+    }
   },
 
   getMarques: async (): Promise<Marque[]> => {
-    const response = await axios.get(`${API_URL}/api/stocks/marques`);
-    return response.data;
+    try {
+      const response = await axios.get(`${API_URL}/api/stocks/marques`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching marques:', error);
+      throw error;
+    }
   },
 };
 
@@ -1484,7 +1404,7 @@ const Header: React.FC = () => {
               alt="DCAT Shop Logo" 
               className="h-8 w-auto" // Ajustez la taille selon vos besoins
             />
-            <span className="text-2xl font-serif font-bold">E-Shop</span>
+            <span className="text-2xl font-serif font-bold">Shop</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -1670,91 +1590,9 @@ export default LoadingSpinner;
 ================================================
 File: src/components/ui/ProductCard.tsx
 ================================================
-// import React from 'react';
-// import { ProductImage } from '../../types/product';
-
-// interface ProductCardProps {
-//   product: {
-//     id: number;
-//     code: string;
-//     name: string;
-//     description: string;
-//     price: number;
-//     images: ProductImage[];
-//     inStock: boolean;
-//     stockQuantity: number;
-//     features?: string;
-//     brand?: string;
-//     location?: string | null;
-//   };
-// }
-
-// const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-//   const mainImage = product.images.find(img => img.numero_image === "1")?.url || 
-//                    product.images[0]?.url;
-
-//   return (
-//     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-//       <div className="aspect-square bg-gray-100 relative">
-//         {mainImage ? (
-//           <img
-//             src={mainImage}
-//             alt={product.name}
-//             className="w-full h-full object-cover"
-//             onError={(e) => {
-//               (e.target as HTMLImageElement).src = '/placeholder-product.png';
-//             }}
-//           />
-//         ) : (
-//           <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-//             <span>Image non disponible</span>
-//           </div>
-//         )}
-//       </div>
-      
-//       <div className="p-4 flex flex-col flex-grow">
-//         <div className="mb-2">
-//           <span className="text-xs text-gray-500">{product.code}</span>
-//           <h3 className="font-medium text-lg line-clamp-1">{product.name}</h3>
-//           {product.brand && (
-//             <span className="text-sm text-gray-600">{product.brand}</span>
-//           )}
-//         </div>
-        
-//         <p className="text-gray-600 text-sm mb-2 line-clamp-2 flex-grow">
-//           {product.description}
-//         </p>
-        
-//         {product.features && (
-//           <p className="text-gray-500 text-xs mb-2 line-clamp-1">
-//             {product.features}
-//           </p>
-//         )}
-        
-//         {product.location && (
-//           <p className="text-gray-500 text-xs mb-1">
-//             Emplacement: {product.location}
-//           </p>
-//         )}
-
-//         <div className="flex justify-between items-center mt-auto">
-//           <span className="font-bold text-amber-600">
-//             {product.price.toLocaleString()} FCFA
-//           </span>
-//           <span className={`text-xs ${product.inStock ? 'text-green-500' : 'text-red-500'}`}>
-//             {product.stockQuantity > 0 ? `${product.stockQuantity} en stock` : 'Rupture'}
-//           </span>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default ProductCard;
-
 
 import React from 'react';
-import { ProductImage, Product } from '../../types/product';
+import { Product } from '../../types/product';
 import { Link } from 'react-router-dom';
 
 interface ProductCardProps {
@@ -1763,9 +1601,9 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { produit, images, marque } = product;
-
-  const mainImage =
-    images.find((img) => img.numero_image === '1')?.url || images[0]?.url;
+  
+  // Trouver l'image principale (prÃ©fÃ©rer celle avec numÃ©ro_image = '1')
+  const mainImage = images.find((img) => img.numero_image === '1')?.url || images[0]?.url;
 
   return (
     <Link to={`/produits/${produit.id_produit}`} className="h-full">
@@ -1789,7 +1627,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         <div className="p-4 flex flex-col flex-grow">
           <div className="mb-2">
-            <span className="text-xs text-gray-500">{produit.code_produit}</span>
+            {produit.code_produit && (
+              <span className="text-xs text-gray-500">{produit.code_produit}</span>
+            )}
             <h3 className="font-medium text-lg line-clamp-1">
               {produit.desi_produit}
             </h3>
@@ -1798,9 +1638,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-          <p className="text-gray-600 text-sm mb-2 line-clamp-2 flex-grow">
-            {produit.desc_produit}
-          </p>
+          {produit.desc_produit && (
+            <p className="text-gray-600 text-sm mb-2 line-clamp-2 flex-grow">
+              {produit.desc_produit}
+            </p>
+          )}
 
           {produit.caracteristiques_produit && (
             <p className="text-gray-500 text-xs mb-2 line-clamp-1">
@@ -1808,28 +1650,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </p>
           )}
 
-          {produit.emplacement_produit && (
-            <p className="text-gray-500 text-xs mb-1">
-              Emplacement: {produit.emplacement_produit}
-            </p>
-          )}
-
           <div className="flex justify-between items-center mt-auto">
             <span className="font-bold text-amber-600">
               {produit.prix_produit
-                ? `${parseFloat(produit.prix_produit).toLocaleString()} FCFA`
+                ? `${parseFloat(produit.prix_produit).toLocaleString('fr-FR')} FCFA`
                 : 'Prix indisponible'}
-            </span>
-            <span
-              className={`text-xs ${
-                parseInt(produit.qte_produit.toString()) > 0
-                  ? 'text-green-500'
-                  : 'text-red-500'
-              }`}
-            >
-              {parseInt(produit.qte_produit.toString()) > 0
-                ? `${produit.qte_produit} en stock`
-                : 'Rupture'}
             </span>
           </div>
         </div>
@@ -3526,524 +3351,13 @@ export default CartPage;
 ================================================
 File: src/pages/CatalogPage.tsx
 ================================================
-// import React, { useState, useEffect } from 'react';
-// import { useSearchParams } from 'react-router-dom';
-// import { Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-// import ProductCard from '../components/ui/ProductCard';
-// import { stocksApi } from '../api/stocks';
-// import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
-
-// const CatalogPage: React.FC = () => {
-//   const [searchParams, setSearchParams] = useSearchParams();
-//   const [productsData, setProductsData] = useState<PaginatedResponse<Product> | null>(null);
-//   const [familles, setFamilles] = useState<Famille[]>([]);
-//   const [marques, setMarques] = useState<Marque[]>([]);
-//   const [isFilterOpen, setIsFilterOpen] = useState(false);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-
-//   // Pagination
-//   const page = parseInt(searchParams.get('page') || '1');
-//   const limit = 10;
-
-//   // Filter statesa
-//   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
-//   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-//   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-//   const [inStockOnly, setInStockOnly] = useState(false);
-//   const [sortOption, setSortOption] = useState('newest');
-
-//   // Fetch products with pagination
-//   const fetchProducts = async (page: number) => {
-//     try {
-//       setLoading(true);
-//       const data = await stocksApi.getProducts(page, limit);
-//       setProductsData(data);
-//       setSearchParams({ page: page.toString() });
-//     } catch (err) {
-//       setError('Erreur lors du chargement des donnÃ©es');
-//       console.error(err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // Initial fetch
-//   useEffect(() => {
-//     document.title = "Catalogue Produits - DCAT Shop";
-
-//     const fetchInitialData = async () => {
-//       try {
-//         setLoading(true);
-//         const [famillesData, marquesData] = await Promise.all([
-//           stocksApi.getFamilles(),
-//           stocksApi.getMarques()
-//         ]);
-
-//         setFamilles(famillesData);
-//         setMarques(marquesData);
-//         await fetchProducts(page);
-//       } catch (err) {
-//         setError('Erreur lors du chargement des donnÃ©es');
-//         console.error(err);
-//       }
-//     };
-
-//     fetchInitialData();
-//   }, []);
-
-//   // Handle page change
-//   const handlePageChange = (newPage: number) => {
-//     if (newPage < 1 || newPage > (productsData?.pagination.totalPages || 1)) return;
-//     fetchProducts(newPage);
-//   };
-
-//   // Apply filters (client-side filtering if needed)
-//   const filteredProducts = productsData?.data.filter(product => {
-//     // Category filter
-//     const categoryMatch = selectedCategories.length === 0 || 
-//       selectedCategories.includes(product.famille.id_famille.toString());
-    
-//     // Brand filter
-//     const brandMatch = selectedBrands.length === 0 ||
-//       selectedBrands.includes(product.marque.id_marque.toString());
-    
-//     // Price filter
-//     const price = parseFloat(product.produit.prix_produit);
-//     const priceMatch = price >= priceRange[0] && price <= priceRange[1];
-    
-//     // Stock filter
-//     const stockMatch = !inStockOnly || product.produit.qte_produit > 0;
-    
-//     return categoryMatch && brandMatch && priceMatch && stockMatch;
-//   }) || [];
-
-//   const toggleCategory = (id: string) => {
-//     setSelectedCategories(prev => 
-//       prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
-//     );
-//   };
-
-//   const toggleBrand = (id: string) => {
-//     setSelectedBrands(prev => 
-//       prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
-//     );
-//   };
-
-//   const clearFilters = () => {
-//     setSelectedCategories([]);
-//     setSelectedBrands([]);
-//     setPriceRange([0, 1000000]);
-//     setInStockOnly(false);
-//   };
-
-//   if (loading && !productsData) {
-//     return (
-//       <div className="container py-8 md:py-12">
-//         <div className="flex justify-center items-center h-64">
-//           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="container py-8 md:py-12">
-//         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-//           {error}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container py-8 md:py-12">
-//       <h1 className="text-3xl font-serif font-bold mb-8">Notre Catalogue</h1>
-
-//       {/* Mobile filter toggle */}
-//       <div className="flex md:hidden justify-between items-center mb-6">
-//         <button
-//           onClick={() => setIsFilterOpen(!isFilterOpen)}
-//           className="flex items-center space-x-2 border border-slate-300 rounded-md px-4 py-2"
-//         >
-//           <Filter className="h-4 w-4" />
-//           <span>Filtres</span>
-//         </button>
-
-//         <div className="relative">
-//           <select
-//             value={sortOption}
-//             onChange={(e) => setSortOption(e.target.value)}
-//             className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
-//           >
-//             <option value="newest">NouveautÃ©s</option>
-//             <option value="price-asc">Prix : croissant</option>
-//             <option value="price-desc">Prix : dÃ©croissant</option>
-//           </select>
-//           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
-//         </div>
-//       </div>
-
-//       <div className="flex flex-col md:flex-row md:space-x-8">
-//         {/* Filters - Sidebar */}
-//         <aside className={`md:w-64 flex-shrink-0 pb-6 md:pb-0 ${isFilterOpen ? 'block' : 'hidden'} md:block`}>
-//           <div className="sticky top-20 space-y-6">
-//             <div className="flex items-center justify-between mb-4">
-//               <h2 className="text-xl font-medium">Filtres</h2>
-//               <button
-//                 onClick={clearFilters}
-//                 className="text-sm text-amber-600 hover:text-amber-500"
-//               >
-//                 Tout effacer
-//               </button>
-//             </div>
-
-//             {/* Categories */}
-//             <div className="border-b border-slate-200 pb-6">
-//               <h3 className="font-medium mb-4">CatÃ©gories</h3>
-//               <div className="space-y-2 max-h-60 overflow-y-auto">
-//                 {familles.map((famille) => (
-//                   <label key={famille.id_famille} className="flex items-center">
-//                     <input
-//                       type="checkbox"
-//                       checked={selectedCategories.includes(famille.id_famille.toString())}
-//                       onChange={() => toggleCategory(famille.id_famille.toString())}
-//                       className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-//                     />
-//                     <span className="ml-2 text-slate-700">{famille.libelle_famille}</span>
-//                   </label>
-//                 ))}
-//               </div>
-//             </div>
-
-//             {/* Price Range */}
-//             <div className="border-b border-slate-200 pb-6">
-//               <h3 className="font-medium mb-4">Gamme de prix</h3>
-//               <div className="space-y-4">
-//                 <div className="flex space-x-4">
-//                   <input
-//                     type="number"
-//                     min="0"
-//                     value={priceRange[0]}
-//                     onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-//                     className="w-full rounded border-slate-300 focus:ring-amber-500"
-//                     placeholder="Min"
-//                   />
-//                   <span className="text-slate-500">Ã </span>
-//                   <input
-//                     type="number"
-//                     min={priceRange[0]}
-//                     value={priceRange[1]}
-//                     onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-//                     className="w-full rounded border-slate-300 focus:ring-amber-500"
-//                     placeholder="Max"
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Brands */}
-//             <div className="border-b border-slate-200 pb-6">
-//               <h3 className="font-medium mb-4">Marques</h3>
-//               <div className="space-y-2 max-h-60 overflow-y-auto">
-//                 {marques.map((marque) => (
-//                   <label key={marque.id_marque} className="flex items-center">
-//                     <input
-//                       type="checkbox"
-//                       checked={selectedBrands.includes(marque.id_marque?.toString() || '')}
-//                       onChange={() => toggleBrand(marque.id_marque?.toString() || '')}
-//                       className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-//                     />
-//                     <span className="ml-2 text-slate-700">{marque.libelle_marque || 'Non spÃ©cifiÃ©'}</span>
-//                   </label>
-//                 ))}
-//               </div>
-//             </div>
-
-//             {/* Availability */}
-//             <div>
-//               <h3 className="font-medium mb-4">DisponibilitÃ©</h3>
-//               <label className="flex items-center">
-//                 <input
-//                   type="checkbox"
-//                   checked={inStockOnly}
-//                   onChange={() => setInStockOnly(!inStockOnly)}
-//                   className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-//                 />
-//                 <span className="ml-2 text-slate-700">En stock seulement</span>
-//               </label>
-//             </div>
-//           </div>
-//         </aside>
-
-//         {/* Main Content */}
-//         <div className="flex-1">
-//           {/* Desktop sort and pagination info */}
-//           <div className="hidden md:flex justify-between items-center mb-6">
-//             <p className="text-slate-600">
-//               {productsData?.pagination.total || 0} produits au total
-//             </p>
-//             <div className="flex items-center space-x-2">
-//               <span className="text-slate-600">Trier par:</span>
-//               <div className="relative">
-//                 <select
-//                   value={sortOption}
-//                   onChange={(e) => setSortOption(e.target.value)}
-//                   className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
-//                 >
-//                   <option value="newest">NouveautÃ©s</option>
-//                   <option value="price-asc">Prix : croissant</option>
-//                   <option value="price-desc">Prix : dÃ©croissant</option>
-//                 </select>
-//                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Products Grid */}
-//           {filteredProducts.length > 0 ? (
-//             <>
-//               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-//                 {filteredProducts.map((product) => (
-//                   <ProductCard
-//                     key={product.produit.id_produit}
-//                     product={{
-//                       id: product.produit.id_produit,
-//                       code: product.produit.code_produit,
-//                       name: product.produit.desi_produit,
-//                       description: product.produit.desc_produit,
-//                       price: parseFloat(product.produit.prix_produit),
-//                       images: product.images,
-//                       inStock: product.produit.qte_produit > 0,
-//                       stockQuantity: product.produit.qte_produit,
-//                       features: product.produit.caracteristiques_produit,
-//                       brand: product.marque.libelle_marque,
-//                       location: product.produit.emplacement_produit
-//                     }}
-//                   />
-//                 ))}
-//               </div>
-
-//               {/* Pagination */}
-//               {productsData && productsData.pagination.totalPages > 1 && (
-//                 <div className="flex justify-center items-center mt-8 space-x-2">
-//                   <button
-//                     onClick={() => handlePageChange(page - 1)}
-//                     disabled={page === 1}
-//                     className="p-2 rounded-md border disabled:opacity-50"
-//                   >
-//                     <ChevronLeft className="h-5 w-5" />
-//                   </button>
-                  
-//                   <span className="px-4 py-2 bg-amber-100 text-amber-800 rounded-md">
-//                     Page {page} sur {productsData.pagination.totalPages}
-//                   </span>
-                  
-//                   <button
-//                     onClick={() => handlePageChange(page + 1)}
-//                     disabled={page >= productsData.pagination.totalPages}
-//                     className="p-2 rounded-md border disabled:opacity-50"
-//                   >
-//                     <ChevronRight className="h-5 w-5" />
-//                   </button>
-//                 </div>
-//               )}
-//             </>
-//           ) : (
-//             <div className="text-center py-16">
-//               <p className="text-slate-600 mb-4">
-//                 Aucun produit ne correspond Ã  vos filtres.
-//               </p>
-//               <button
-//                 onClick={clearFilters}
-//                 className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-md"
-//               >
-//                 Effacer les filtres
-//               </button>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default CatalogPage;
-
-
-
-// import React, { useState, useEffect } from 'react';
-// import { useSearchParams } from 'react-router-dom';
-// import { Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-// import ProductCard from '../components/ui/ProductCard';
-// import { stocksApi } from '../api/stocks';
-// import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
-
-// const CatalogPage: React.FC = () => {
-//   const [searchParams, setSearchParams] = useSearchParams();
-//   const [productsData, setProductsData] = useState<PaginatedResponse<Product> | null>(null);
-//   const [familles, setFamilles] = useState<Famille[]>([]);
-//   const [marques, setMarques] = useState<Marque[]>([]);
-//   const [isFilterOpen, setIsFilterOpen] = useState(false);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const page = parseInt(searchParams.get('page') || '1');
-//   const limit = 10;
-
-//   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
-//   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-//   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-//   const [inStockOnly, setInStockOnly] = useState(false);
-//   const [sortOption, setSortOption] = useState('newest');
-
-//   const fetchProducts = async (page: number) => {
-//     try {
-//       setLoading(true);
-//       const data = await stocksApi.getProducts(page, limit);
-//       setProductsData(data);
-//       setSearchParams({ page: page.toString() });
-//     } catch (err) {
-//       setError('Erreur lors du chargement des donnÃ©es');
-//       console.error(err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     document.title = "Catalogue Produits - DCAT Shop";
-
-//     const fetchInitialData = async () => {
-//       try {
-//         setLoading(true);
-//         const [famillesData, marquesData] = await Promise.all([
-//           stocksApi.getFamilles(),
-//           stocksApi.getMarques()
-//         ]);
-
-//         setFamilles(famillesData);
-//         setMarques(marquesData);
-//         await fetchProducts(page);
-//       } catch (err) {
-//         setError('Erreur lors du chargement des donnÃ©es');
-//         console.error(err);
-//       }
-//     };
-
-//     fetchInitialData();
-//   }, []);
-
-//   const handlePageChange = (newPage: number) => {
-//     if (newPage < 1 || newPage > (productsData?.pagination.totalPages || 1)) return;
-//     fetchProducts(newPage);
-//   };
-
-//   const filteredProducts = productsData?.data
-//     .filter(product => {
-//       const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.famille.id_famille.toString());
-//       const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(product.marque.id_marque.toString());
-//       const price = parseFloat(product.produit.prix_produit);
-//       const priceMatch = price >= priceRange[0] && price <= priceRange[1];
-//       const stockMatch = !inStockOnly || product.produit.qte_produit > 0;
-//       return categoryMatch && brandMatch && priceMatch && stockMatch;
-//     }) || [];
-
-//   const toggleCategory = (id: string) => {
-//     setSelectedCategories(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
-//   };
-
-//   const toggleBrand = (id: string) => {
-//     setSelectedBrands(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]);
-//   };
-
-//   const clearFilters = () => {
-//     setSelectedCategories([]);
-//     setSelectedBrands([]);
-//     setPriceRange([0, 1000000]);
-//     setInStockOnly(false);
-//   };
-
-//   const sortedProducts = filteredProducts.sort((a, b) => {
-//     const priceA = parseFloat(a.produit.prix_produit);
-//     const priceB = parseFloat(b.produit.prix_produit);
-//     if (sortOption === 'price-asc') return priceA - priceB;
-//     if (sortOption === 'price-desc') return priceB - priceA;
-//     return 0;
-//   });
-
-//   if (loading && !productsData) {
-//     return (
-//       <div className="container py-8 md:py-12">
-//         <div className="flex justify-center items-center h-64">
-//           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <div className="container py-8 md:py-12">
-//         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-//           {error}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="container py-8 md:py-12">
-//       <h1 className="text-3xl font-serif font-bold mb-8">Notre Catalogue</h1>
-
-//       {/* Sort & Filter UI */}
-
-//       {/* Filters, sorting dropdown, sidebar and grid are implemented as before */}
-      
-
-//       {/* Products Grid */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-//         {sortedProducts.map((product) => (
-//           <ProductCard key={product.produit.id_produit} product={product} />
-//         ))}
-//       </div>
-
-//       {/* Pagination Controls */}
-//       <div className="flex justify-center items-center mt-8 space-x-4">
-//         <button
-//           onClick={() => handlePageChange(page - 1)}
-//           disabled={page <= 1}
-//           className="flex items-center px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded disabled:opacity-50"
-//         >
-//           <ChevronLeft className="h-4 w-4 mr-1" /> PrÃ©cÃ©dent
-//         </button>
-
-//         <span className="text-slate-600">
-//           Page {page} sur {productsData?.pagination.totalPages || 1}
-//         </span>
-
-//         <button
-//           onClick={() => handlePageChange(page + 1)}
-//           disabled={page >= (productsData?.pagination.totalPages || 1)}
-//           className="flex items-center px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded disabled:opacity-50"
-//         >
-//           Suivant <ChevronRight className="h-4 w-4 ml-1" />
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default CatalogPage;
-
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ui/ProductCard';
 import { stocksApi } from '../api/stocks';
 import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const CatalogPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -4053,33 +3367,46 @@ const CatalogPage: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Get current page from URL or default to 1
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = 10;
+  const limit = 3;
 
   // Filter states
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortOption, setSortOption] = useState('newest');
+  const [sortOption, setSortOption] = useState<'newest' | 'oldest'>('newest');
 
-  // Fetch products with filters and pagination
   const fetchProducts = async (page: number) => {
     try {
       setLoading(true);
       
-      // Prepare filters for backend
+      // Convert selected IDs to libelles
+      const selectedFamilleLibelles = familles
+        .filter(f => selectedCategories.includes(f.id_famille.toString()))
+        .map(f => f.libelle_famille)
+        .join(',');
+
+      const selectedMarqueLibelles = marques
+        .filter(m => selectedBrands.includes(m.id_marque?.toString() || ''))
+        .map(m => m.libelle_marque || '')
+        .filter(Boolean)
+        .join(',');
+
+      // Prepare sort parameters
+      const sortBy = 'updated_at';
+      const sortOrder = sortOption === 'newest' ? 'desc' : 'asc';
+
       const filters = {
         page,
         limit,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        familles: selectedCategories.join(','),
-        marques: selectedBrands.join(','),
-        inStockOnly,
-        sort: sortOption
+        prixMin: priceRange[0],
+        prixMax: priceRange[1],
+        familleLibelle: selectedFamilleLibelles,
+        marqueLibelle: selectedMarqueLibelles,
+        sortBy,
+        sortOrder
       };
 
       const data = await stocksApi.getProducts(filters);
@@ -4087,13 +3414,12 @@ const CatalogPage: React.FC = () => {
       
       // Update URL params
       const params: Record<string, string> = { page: page.toString() };
-      if (selectedCategories.length > 0) params.categories = selectedCategories.join(',');
-      if (selectedBrands.length > 0) params.brands = selectedBrands.join(',');
+      if (selectedFamilleLibelles) params.familleLibelle = selectedFamilleLibelles;
+      if (selectedMarqueLibelles) params.marqueLibelle = selectedMarqueLibelles;
       if (priceRange[0] > 0 || priceRange[1] < 1000000) {
-        params.minPrice = priceRange[0].toString();
-        params.maxPrice = priceRange[1].toString();
+        params.prixMin = priceRange[0].toString();
+        params.prixMax = priceRange[1].toString();
       }
-      if (inStockOnly) params.inStock = 'true';
       if (sortOption !== 'newest') params.sort = sortOption;
       
       setSearchParams(params);
@@ -4114,24 +3440,13 @@ const CatalogPage: React.FC = () => {
         setLoading(true);
         
         // Read filters from URL if present
-        const urlCategories = searchParams.get('categories');
-        const urlBrands = searchParams.get('brands');
-        const urlMinPrice = searchParams.get('minPrice');
-        const urlMaxPrice = searchParams.get('maxPrice');
-        const urlInStock = searchParams.get('inStock');
+        const urlFamilleLibelle = searchParams.get('familleLibelle');
+        const urlMarqueLibelle = searchParams.get('marqueLibelle');
+        const urlPrixMin = searchParams.get('prixMin');
+        const urlPrixMax = searchParams.get('prixMax');
         const urlSort = searchParams.get('sort');
-        
-        if (urlCategories) setSelectedCategories(urlCategories.split(','));
-        if (urlBrands) setSelectedBrands(urlBrands.split(','));
-        if (urlMinPrice || urlMaxPrice) {
-          setPriceRange([
-            urlMinPrice ? Number(urlMinPrice) : 0,
-            urlMaxPrice ? Number(urlMaxPrice) : 1000000
-          ]);
-        }
-        if (urlInStock) setInStockOnly(urlInStock === 'true');
-        if (urlSort) setSortOption(urlSort);
 
+        // First load familles and marques
         const [famillesData, marquesData] = await Promise.all([
           stocksApi.getFamilles(),
           stocksApi.getMarques()
@@ -4139,6 +3454,33 @@ const CatalogPage: React.FC = () => {
 
         setFamilles(famillesData);
         setMarques(marquesData);
+
+        // Convert URL libelles to IDs after data is loaded
+        if (urlFamilleLibelle) {
+          const familleIds = famillesData
+            .filter(f => urlFamilleLibelle.split(',').includes(f.libelle_famille))
+            .map(f => f.id_famille.toString());
+          setSelectedCategories(familleIds);
+        }
+
+        if (urlMarqueLibelle) {
+          const marqueIds = marquesData
+            .filter(m => m.libelle_marque && urlMarqueLibelle.split(',').includes(m.libelle_marque))
+            .map(m => m.id_marque?.toString() || '');
+          setSelectedBrands(marqueIds);
+        }
+
+        if (urlPrixMin || urlPrixMax) {
+          setPriceRange([
+            urlPrixMin ? Number(urlPrixMin) : 0,
+            urlPrixMax ? Number(urlPrixMax) : 1000000
+          ]);
+        }
+
+        if (urlSort) {
+          setSortOption(urlSort as 'newest' | 'oldest');
+        }
+
         await fetchProducts(page);
       } catch (err) {
         setError('Erreur lors du chargement des donnÃ©es');
@@ -4152,9 +3494,9 @@ const CatalogPage: React.FC = () => {
   // Refetch products when filters change
   useEffect(() => {
     if (productsData) {
-      fetchProducts(1); // Reset to page 1 when filters change
+      fetchProducts(1);
     }
-  }, [selectedCategories, selectedBrands, priceRange, inStockOnly, sortOption]);
+  }, [selectedCategories, selectedBrands, priceRange, sortOption]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > (productsData?.pagination.totalPages || 1)) return;
@@ -4163,13 +3505,13 @@ const CatalogPage: React.FC = () => {
 
   const toggleCategory = (id: string) => {
     setSelectedCategories(prev => 
-      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+      prev.includes(id) ? [] : [id] // Single selection
     );
   };
 
   const toggleBrand = (id: string) => {
     setSelectedBrands(prev => 
-      prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
+      prev.includes(id) ? [] : [id] // Single selection
     );
   };
 
@@ -4177,25 +3519,22 @@ const CatalogPage: React.FC = () => {
     setSelectedCategories([]);
     setSelectedBrands([]);
     setPriceRange([0, 1000000]);
-    setInStockOnly(false);
     setSortOption('newest');
     setSearchParams({});
   };
 
+  const getSortLabel = () => {
+    return sortOption === 'newest' ? 'NouveautÃ©s' : 'AnciennetÃ©';
+  };
+
   if (loading && !productsData) {
-    return (
-      <div className="container py-8 md:py-12">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
     return (
       <div className="container py-8 md:py-12">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="alert alert-error">
           {error}
         </div>
       </div>
@@ -4204,29 +3543,55 @@ const CatalogPage: React.FC = () => {
 
   return (
     <div className="container py-8 md:py-12">
-      <h1 className="text-3xl font-serif font-bold mb-8">Notre Catalogue</h1>
+      <h1 className="text-3xl font-bold mb-8">Notre Catalogue</h1>
 
       {/* Mobile filter toggle */}
       <div className="flex md:hidden justify-between items-center mb-6">
         <button
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          className="flex items-center space-x-2 border border-slate-300 rounded-md px-4 py-2"
+          className="btn btn-outline"
         >
-          <Filter className="h-4 w-4" />
-          <span>Filtres</span>
+          <Filter className="h-4 w-4 mr-2" />
+          Filtres
         </button>
 
         <div className="relative">
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
+          <button 
+            className="btn btn-outline flex items-center"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
           >
-            <option value="newest">NouveautÃ©s</option>
-            <option value="price-asc">Prix : croissant</option>
-            <option value="price-desc">Prix : dÃ©croissant</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
+            Trier par: {getSortLabel()}
+            <ChevronDown className="h-4 w-4 ml-2" />
+          </button>
+          
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white z-50 border border-gray-100">
+              <ul className="py-1">
+                <li>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-50"
+                    onClick={() => {
+                      setSortOption('newest');
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    NouveautÃ©s
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-50"
+                    onClick={() => {
+                      setSortOption('oldest');
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    AnciennetÃ©
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -4236,34 +3601,31 @@ const CatalogPage: React.FC = () => {
           <div className="sticky top-20 space-y-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-medium">Filtres</h2>
-              <button
-                onClick={clearFilters}
-                className="text-sm text-amber-600 hover:text-amber-500"
-              >
+              <button onClick={clearFilters} className="text-sm text-primary">
                 Tout effacer
               </button>
             </div>
 
             {/* Categories */}
-            <div className="border-b border-slate-200 pb-6">
+            <div className="border-b border-base-200 pb-6">
               <h3 className="font-medium mb-4">CatÃ©gories</h3>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {familles.map((famille) => (
-                  <label key={famille.id_famille} className="flex items-center">
+                  <label key={famille.id_famille} className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(famille.id_famille.toString())}
                       onChange={() => toggleCategory(famille.id_famille.toString())}
-                      className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                      className="checkbox checkbox-sm checkbox-primary mr-2"
                     />
-                    <span className="ml-2 text-slate-700">{famille.libelle_famille}</span>
+                    <span>{famille.libelle_famille}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Price Range */}
-            <div className="border-b border-slate-200 pb-6">
+            <div className="border-b border-base-200 pb-6">
               <h3 className="font-medium mb-4">Gamme de prix</h3>
               <div className="space-y-4">
                 <div className="flex space-x-4">
@@ -4272,16 +3634,16 @@ const CatalogPage: React.FC = () => {
                     min="0"
                     value={priceRange[0]}
                     onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                    className="w-full rounded border-slate-300 focus:ring-amber-500"
+                    className="input input-bordered w-full"
                     placeholder="Min"
                   />
-                  <span className="text-slate-500">Ã </span>
+                  <span className="flex items-center">Ã </span>
                   <input
                     type="number"
                     min={priceRange[0]}
                     value={priceRange[1]}
                     onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                    className="w-full rounded border-slate-300 focus:ring-amber-500"
+                    className="input input-bordered w-full"
                     placeholder="Max"
                   />
                 </div>
@@ -4289,35 +3651,21 @@ const CatalogPage: React.FC = () => {
             </div>
 
             {/* Brands */}
-            <div className="border-b border-slate-200 pb-6">
+            <div className="border-b border-base-200 pb-6">
               <h3 className="font-medium mb-4">Marques</h3>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {marques.map((marque) => (
-                  <label key={marque.id_marque} className="flex items-center">
+                  <label key={marque.id_marque} className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedBrands.includes(marque.id_marque?.toString() || '')}
                       onChange={() => toggleBrand(marque.id_marque?.toString() || '')}
-                      className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                      className="checkbox checkbox-sm checkbox-primary mr-2"
                     />
-                    <span className="ml-2 text-slate-700">{marque.libelle_marque || 'Non spÃ©cifiÃ©'}</span>
+                    <span>{marque.libelle_marque || 'Non spÃ©cifiÃ©'}</span>
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Availability */}
-            <div>
-              <h3 className="font-medium mb-4">DisponibilitÃ©</h3>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={() => setInStockOnly(!inStockOnly)}
-                  className="rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-                />
-                <span className="ml-2 text-slate-700">En stock seulement</span>
-              </label>
             </div>
           </div>
         </aside>
@@ -4326,23 +3674,46 @@ const CatalogPage: React.FC = () => {
         <div className="flex-1">
           {/* Desktop sort and pagination info */}
           <div className="hidden md:flex justify-between items-center mb-6">
-            <p className="text-slate-600">
+            <p className="text-gray-600">
               {productsData?.pagination.total || 0} produits trouvÃ©s
             </p>
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-600">Trier par:</span>
-              <div className="relative">
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="border border-slate-300 rounded-md px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="newest">NouveautÃ©s</option>
-                  <option value="price-asc">Prix : croissant</option>
-                  <option value="price-desc">Prix : dÃ©croissant</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
-              </div>
+            <div className="relative">
+              <button 
+                className="btn btn-outline flex items-center"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                Trier par: {getSortLabel()}
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </button>
+              
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white z-50 border border-gray-100">
+                  <ul className="py-1">
+                    <li>
+                      <button 
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-50"
+                        onClick={() => {
+                          setSortOption('newest');
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        NouveautÃ©s
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-50"
+                        onClick={() => {
+                          setSortOption('oldest');
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        AnciennetÃ©
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
@@ -4351,46 +3722,43 @@ const CatalogPage: React.FC = () => {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {productsData.data.map((product) => (
-                  <ProductCard
-                    key={product.produit.id_produit}
-                    product={product} // Passez directement l'objet product complet
-                  />
+                  <ProductCard key={product.produit.id_produit} product={product} />
                 ))}
               </div>
 
               {/* Pagination */}
-              {productsData && productsData.pagination.totalPages > 1 && (
+              {productsData.pagination.totalPages > 1 && (
                 <div className="flex justify-center items-center mt-8 space-x-2">
                   <button
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 1}
-                    className="p-2 rounded-md border disabled:opacity-50"
+                    className="btn btn-outline btn-sm"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
                   
-                  <span className="px-4 py-2 bg-amber-100 text-amber-800 rounded-md">
+                  <span className="px-4 py-2 bg-base-200 rounded-md">
                     Page {page} sur {productsData.pagination.totalPages}
                   </span>
                   
                   <button
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page >= productsData.pagination.totalPages}
-                    className="p-2 rounded-md border disabled:opacity-50"
+                    className="btn btn-outline btn-sm"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}
             </>
           ) : (
             <div className="text-center py-16">
-              <p className="text-slate-600 mb-4">
+              <p className="text-gray-600 mb-4">
                 Aucun produit ne correspond Ã  vos filtres.
               </p>
               <button
                 onClick={clearFilters}
-                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-md"
+                className="btn btn-primary"
               >
                 Effacer les filtres
               </button>
@@ -4403,7 +3771,6 @@ const CatalogPage: React.FC = () => {
 };
 
 export default CatalogPage;
-
 
 
 ================================================
@@ -5152,31 +4519,25 @@ export default NotFoundPage;
 ================================================
 File: src/pages/ProductPage.tsx
 ================================================
-import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import {
-  ChevronRight,
-  Minus,
-  Plus,
-  Truck,
-  Shield,
-  RefreshCw,
-} from "lucide-react";
-import { useCart } from "../context/CartContext";
-import { stocksApi } from "../api/stocks";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
-import ProductCard from "../components/ui/ProductCard";
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ChevronRight, Minus, Plus } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { stocksApi } from '../api/stocks';
+import { Product } from '../types/product';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ProductCard from '../components/ui/ProductCard';
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [activeTab, setActiveTab] = useState("description");
-  const [product, setProduct] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('description');
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -5185,17 +4546,23 @@ const ProductPage: React.FC = () => {
         const productData = await stocksApi.getProductById(Number(id));
         setProduct(productData);
 
-        // Fetch related products from the same family
-        const relatedResponse = await stocksApi.getProducts(1, 4, {
-          famille: productData.famille.id_famille.toString()
-        });
-        setRelatedProducts(
-          relatedResponse.data.filter(p => p.produit.id_produit !== productData.produit.id_produit)
-        );
+        if (productData.famille?.id_famille) {
+          const filters = {
+            page: 1,
+            limit: 4,
+            familleLibelle: productData.famille.libelle_famille,
+            exclude: productData.produit.id_produit.toString(),
+            sortBy: 'created_at',
+            sortOrder: 'desc'
+          };
+
+          const relatedResponse = await stocksApi.getProducts(filters);
+          setRelatedProducts(relatedResponse.data);
+        }
 
         document.title = `${productData.produit.desi_produit} - DCAT Shop`;
       } catch (err) {
-        setError("Produit introuvable ou erreur de chargement");
+        setError('Produit introuvable ou erreur de chargement');
         console.error(err);
       } finally {
         setLoading(false);
@@ -5205,356 +4572,225 @@ const ProductPage: React.FC = () => {
     fetchProductData();
   }, [id]);
 
-  const decreaseQuantity = () => quantity > 1 && setQuantity(quantity - 1);
-  const increaseQuantity = () => setQuantity(quantity + 1);
+  const decreaseQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
+  const increaseQuantity = () => setQuantity(prev => prev + 1);
 
   const handleAddToCart = () => {
     if (product) {
       addToCart({
         id: product.produit.id_produit,
-        code: product.produit.code_produit,
         name: product.produit.desi_produit,
-        description: product.produit.desc_produit,
         price: parseFloat(product.produit.prix_produit),
         image: product.images[0]?.url || '/placeholder-product.png',
-        category: product.famille.libelle_famille,
-        brand: product.marque.libelle_marque,
-        inStock: product.produit.qte_produit > 0,
-        stockQuantity: product.produit.qte_produit,
-        location: product.produit.emplacement_produit
-      }, quantity);
+        quantity,
+        brand: product.marque?.libelle_marque || '',
+        category: product.famille?.libelle_famille || '',
+        stock: product.produit.qte_produit,
+        // location: product.produit.emplacement_produit || ''
+      });
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container py-16 text-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
+  if (loading) return <LoadingSpinner />;
   if (error || !product) {
     return (
       <div className="container py-16 text-center">
-        <h1 className="text-3xl font-serif font-bold mb-4">
-          {error || "Produit introuvable"}
-        </h1>
-        <p className="text-slate-600 mb-8">
-          Le produit que vous recherchez n'existe pas ou a Ã©tÃ© supprimÃ©.
-        </p>
-        <Link 
-          to="/catalog" 
-          className="inline-block bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-md transition-colors"
-        >
+        <h1 className="text-3xl font-bold mb-4 text-amber-600">{error || 'Produit introuvable'}</h1>
+        <Link to="/catalog" className="btn bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-md">
           Retour au catalogue
         </Link>
       </div>
     );
   }
 
-  const mainImage = product.images[selectedImage]?.url || 
-                   product.images[0]?.url;
-
   return (
-    <div className="bg-white">
+    <div className="container py-8">
       {/* Breadcrumbs */}
-      <div className="container py-4">
-        <div className="flex items-center text-sm text-slate-500">
-          <Link to="/" className="hover:text-amber-600 transition-colors">
-            Accueil
-          </Link>
-          <ChevronRight className="h-4 w-4 mx-2" />
-          <Link to="/catalog" className="hover:text-amber-600 transition-colors">
-            Catalogue
-          </Link>
-          <ChevronRight className="h-4 w-4 mx-2" />
-          <Link 
-            to={`/catalog?category=${product.famille.id_famille}`}
-            className="hover:text-amber-600 transition-colors"
-          >
-            {product.famille.libelle_famille}
-          </Link>
-          <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="text-slate-900 font-medium truncate">
-            {product.produit.desi_produit}
-          </span>
-        </div>
+      <div className="text-sm breadcrumbs mb-6">
+        <ul>
+          <li><Link to="/" className="hover:text-amber-600">Accueil</Link></li>
+          <li><Link to="/catalog" className="hover:text-amber-600">Catalogue</Link></li>
+          <li className="text-amber-600">{product.produit.desi_produit}</li>
+        </ul>
       </div>
 
-      {/* Product Details */}
-      <div className="container py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div>
-            <div className="bg-slate-50 rounded-lg overflow-hidden mb-4">
-              {mainImage ? (
-                <img
-                  src={mainImage}
-                  alt={product.produit.desi_produit}
-                  className="w-full h-96 object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-product.png';
-                  }}
-                />
-              ) : (
-                <div className="w-full h-96 flex items-center justify-center bg-slate-100 text-slate-400">
-                  Image non disponible
-                </div>
-              )}
-            </div>
-            
-            {/* Thumbnails */}
-            {product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image: any, index: number) => (
-                  <button
-                    key={image.id_image}
-                    onClick={() => setSelectedImage(index)}
-                    className={`border rounded-md overflow-hidden ${selectedImage === index ? 'border-amber-500' : 'border-slate-200'}`}
-                  >
-                    <img
-                      src={image.url}
-                      alt={image.libelle_image}
-                      className="w-full h-20 object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+      {/* Main Content */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Images */}
+        <div className="space-y-4">
+          <div className="bg-gray-100 rounded-lg h-96 flex items-center justify-center p-4">
+            <img
+              src={product.images[selectedImage]?.url || '/placeholder-product.png'}
+              alt={product.produit.desi_produit}
+              className="max-h-full max-w-full object-contain"
+            />
           </div>
-
-          {/* Product Info */}
-          <div>
-            <div className="mb-2">
-              <Link
-                to={`/catalog?brand=${product.marque.id_marque}`}
-                className="text-amber-600 hover:text-amber-700 font-medium"
-              >
-                {product.marque.libelle_marque}
-              </Link>
-            </div>
-
-            <h1 className="text-3xl font-serif font-bold mb-4">
-              {product.produit.desi_produit}
-            </h1>
-
-            <div className="mb-6">
-              <div className="flex items-center">
-                <span className="text-3xl font-bold text-slate-900">
-                  {parseFloat(product.produit.prix_produit).toLocaleString('fr-FR')} FCFA
-                </span>
-              </div>
-              <div className="text-slate-500 mt-1">
-                DisponibilitÃ©:
-                <span
-                  className={`ml-2 font-medium ${
-                    product.produit.qte_produit > 0 ? "text-green-600" : "text-amber-600"
+          {product.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {product.images.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`rounded-md overflow-hidden border-2 transition-all ${
+                    selectedImage === index 
+                      ? 'border-amber-500 ring-2 ring-amber-200' 
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  {product.produit.qte_produit > 0 
-                    ? `${product.produit.qte_produit} en stock` 
-                    : "Rupture de stock"}
-                </span>
-              </div>
-              <div className="text-slate-500 mt-1">
-                Emplacement: {product.produit.emplacement_produit || "Non spÃ©cifiÃ©"}
-              </div>
-              <div className="text-slate-500 mt-1">
-                ModÃ¨le: {product.modele.libelle_modele}
-              </div>
-            </div>
-
-            <div className="prose prose-slate mb-6 text-slate-700">
-              <p>{product.produit.desc_produit}</p>
-            </div>
-
-            {/* Add to cart */}
-            {product.produit.qte_produit > 0 ? (
-              <div className="flex items-center mb-8">
-                <div className="flex border border-slate-300 rounded-md mr-4">
-                  <button
-                    onClick={decreaseQuantity}
-                    className="px-3 py-2 flex items-center justify-center hover:bg-slate-100"
-                    aria-label="Diminuer la quantitÃ©"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max={product.produit.qte_produit}
-                    value={quantity}
-                    onChange={(e) => {
-                      const value = Math.max(
-                        1, 
-                        Math.min(
-                          product.produit.qte_produit, 
-                          Number(e.target.value) || 1
-                        )
-                      );
-                      setQuantity(value);
-                    }}
-                    className="w-12 px-2 py-2 text-center focus:outline-none focus:ring-0 border-x border-slate-300"
+                  <img 
+                    src={img.url} 
+                    alt="" 
+                    className="h-20 w-full object-cover" 
                   />
-                  <button
-                    onClick={increaseQuantity}
-                    disabled={quantity >= product.produit.qte_produit}
-                    className="px-3 py-2 flex items-center justify-center hover:bg-slate-100 disabled:opacity-50"
-                    aria-label="Augmenter la quantitÃ©"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-                <button
-                  onClick={handleAddToCart}
-                  className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-md transition-colors flex-1"
-                >
-                  Ajouter au panier
                 </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-gray-900">{product.produit.desi_produit}</h1>
+
+          {product.marque?.libelle_marque && (
+            <p className="text-lg text-gray-600">
+              Marque : <span className="text-amber-600 font-medium">{product.marque.libelle_marque}</span>
+            </p>
+          )}
+
+          <div className="text-3xl font-extrabold text-amber-600">
+            {parseFloat(product.produit.prix_produit).toLocaleString('fr-FR')} FCFA
+          </div>
+
+          <div className="space-y-2 text-gray-700">
+            <div><span className="font-medium">RÃ©fÃ©rence :</span> {product.produit.code_produit}</div>
+            {product.modele?.libelle_modele && (
+              <div><span className="font-medium">ModÃ¨le :</span> {product.modele.libelle_modele}</div>
+            )}
+          </div>
+
+          {/* Quantity and Cart */}
+          <div className="flex items-center gap-4 py-6">
+            <div className="flex border border-gray-300 rounded-md">
+              <button 
+                onClick={decreaseQuantity} 
+                className="px-3 py-2 hover:bg-gray-50 text-gray-600"
+              >
+                <Minus size={16} />
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                className="w-12 text-center border-x border-gray-300 focus:outline-none"
+              />
+              <button 
+                onClick={increaseQuantity} 
+                className="px-3 py-2 hover:bg-gray-50 text-gray-600"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-3 px-6 rounded-md font-medium transition-colors"
+            >
+              Ajouter au panier
+            </button>
+          </div>
+
+          {/* Tabs Navigation */}
+          <div className="border-b border-gray-200">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('description')}
+                className={`pb-3 px-1 font-medium relative ${
+                  activeTab === 'description' 
+                    ? 'text-amber-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Description
+                {activeTab === 'description' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"></span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('specs')}
+                className={`pb-3 px-1 font-medium relative ${
+                  activeTab === 'specs' 
+                    ? 'text-amber-600' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                CaractÃ©ristiques
+                {activeTab === 'specs' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500"></span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="py-4">
+            {activeTab === 'description' ? (
+              <div className="prose max-w-none">
+                {product.produit.desc_produit ? (
+                  <div className="text-gray-700 whitespace-pre-line">
+                    {product.produit.desc_produit}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">Aucune description disponible</p>
+                )}
               </div>
             ) : (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded mb-8">
-                Ce produit est actuellement en rupture de stock
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">RÃ©fÃ©rence</h4>
+                    <p className="text-gray-900">{product.produit.code_produit}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Categorie</h4>
+                    <p className="text-gray-900">{product.famille?.libelle_famille || 'Non spÃ©cifiÃ©'}</p>
+                  </div>
+                  {product.marque?.libelle_marque && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">Marque</h4>
+                      <p className="text-gray-900">{product.marque.libelle_marque}</p>
+                    </div>
+                  )}
+                  {product.modele?.libelle_modele && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-500">ModÃ¨le</h4>
+                      <p className="text-gray-900">{product.modele.libelle_modele}</p>
+                    </div>
+                  )}
+                </div>
+
+                {product.produit.caracteristiques_produit && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-500 mb-2">CaractÃ©ristiques techniques</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <pre className="text-gray-900 whitespace-pre-wrap font-sans">
+                        {product.produit.caracteristiques_produit}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-
-            {/* Shipping and Returns */}
-            <div className="space-y-4 border-t border-slate-200 pt-6">
-              <div className="flex items-start">
-                <Truck className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">ExpÃ©dition rapide</h3>
-                  <p className="text-sm text-slate-500">
-                    Commandes prÃ©parÃ©es et envoyÃ©es dans un dÃ©lai trÃ¨s court
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <Shield className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Produit authentique</h3>
-                  <p className="text-sm text-slate-500">
-                    QualitÃ© garantie, sans contrefaÃ§on
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <RefreshCw className="h-5 w-5 text-amber-500 mr-3 mt-0.5" />
-                <div>
-                  <h3 className="font-medium">Service d'installation</h3>
-                  <p className="text-sm text-slate-500">
-                    Nous proposons l'installation professionnelle de vos
-                    produits, sur demande
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Product Details Tabs */}
-      <div className="container py-12">
-        <div className="border-b border-slate-200">
-          <div className="flex overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("description")}
-              className={`px-6 py-3 font-medium text-sm border-b-2 whitespace-nowrap ${
-                activeTab === "description"
-                  ? "border-amber-500 text-amber-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Description
-            </button>
-            <button
-              onClick={() => setActiveTab("specifications")}
-              className={`px-6 py-3 font-medium text-sm border-b-2 whitespace-nowrap ${
-                activeTab === "specifications"
-                  ? "border-amber-500 text-amber-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              CaractÃ©ristiques
-            </button>
-          </div>
-        </div>
-
-        <div className="py-8">
-          {activeTab === "description" && (
-            <div className="prose prose-slate max-w-none">
-              <p>{product.produit.desc_produit}</p>
-            </div>
-          )}
-
-          {activeTab === "specifications" && (
-            <div className="prose prose-slate max-w-none">
-              <table className="min-w-full divide-y divide-slate-200">
-                <tbody className="divide-y divide-slate-200">
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700 w-1/3">Code produit</td>
-                    <td className="py-3 px-4 text-slate-600">{product.produit.code_produit}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700">CatÃ©gorie</td>
-                    <td className="py-3 px-4 text-slate-600">{product.category.libelle}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700">Famille</td>
-                    <td className="py-3 px-4 text-slate-600">{product.famille.libelle_famille}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700">Type</td>
-                    <td className="py-3 px-4 text-slate-600">{product.type.libelle}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700">Marque</td>
-                    <td className="py-3 px-4 text-slate-600">{product.marque.libelle_marque}</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-4 font-medium text-slate-700">ModÃ¨le</td>
-                    <td className="py-3 px-4 text-slate-600">{product.modele.libelle_modele}</td>
-                  </tr>
-                  {product.produit.caracteristiques_produit && (
-                    <tr>
-                      <td className="py-3 px-4 font-medium text-slate-700">CaractÃ©ristiques</td>
-                      <td className="py-3 px-4 text-slate-600 whitespace-pre-line">
-                        {product.produit.caracteristiques_produit}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <div className="container py-12 border-t border-slate-200">
-          <h2 className="text-2xl font-serif font-bold mb-8">
-            Produits similaires
-          </h2>
+        <div className="mt-16 pt-8 border-t border-gray-200">
+          <h2 className="text-2xl font-bold text-amber-600 mb-6">Produits similaires</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
-              <ProductCard
-                key={product.produit.id_produit}
-                product={{
-                  id: product.produit.id_produit,
-                  code: product.produit.code_produit,
-                  name: product.produit.desi_produit,
-                  description: product.produit.desc_produit,
-                  price: parseFloat(product.produit.prix_produit),
-                  images: product.images,
-                  inStock: product.produit.qte_produit > 0,
-                  stockQuantity: product.produit.qte_produit,
-                  features: product.produit.caracteristiques_produit,
-                  brand: product.marque.libelle_marque,
-                  location: product.produit.emplacement_produit
-                }}
-              />
+            {relatedProducts.map((related) => (
+              <ProductCard key={related.produit.id_produit} product={related} />
             ))}
           </div>
         </div>
@@ -5955,7 +5191,7 @@ export interface Product {
   };
   marque: {
     id_marque: number;
-    libelle_marque: string;
+    libelle_marque: string | null;
   };
   images: ProductImage[];
 }
