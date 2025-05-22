@@ -214,3 +214,74 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+
+
+
+
+
+
+
+// import { User, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+// import { auth } from '../firebase/firebase';
+// import axios from 'axios';
+// import React, { createContext, useContext, useState } from 'react';
+// import { UserCredential } from 'firebase/auth';
+
+// API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// interface AuthContextType {
+//   currentUser: User | null;
+//   register: (email: string, password: string, nom: string, contact: string) => Promise<void>;
+//   signInWithGoogle: () => Promise<UserCredential>;
+// }
+
+// export function AuthProvider({ children }: { children: React.ReactNode }) {
+//   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+//   const register = async (email: string, password: string, nom: string, contact: string) => {
+//     try {
+//       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+//       // Synchronisation avec le backend
+//       await axios.post(`${API_URL}/ecommerce/auth/sync-user`, {
+//         uid: userCredential.user.uid,
+//         email,
+//         nom,
+//         contact,
+//         provider: 'email'
+//       }, {
+//         headers: { Authorization: `Bearer ${await userCredential.user.getIdToken()}` }
+//       });
+
+//       setCurrentUser(userCredential.user);
+//     } catch (error) {
+//       console.error("Registration error:", error);
+//       throw error;
+//     }
+//   };
+
+//   const signInWithGoogle = async () => {
+//     const provider = new GoogleAuthProvider();
+//     const result = await signInWithPopup(auth, provider);
+    
+//     // Sync avec backend
+//     await axios.post(`${API_URL}/ecommerce/auth/sync-user`, {
+//       uid: result.user.uid,
+//       email: result.user.email,
+//       nom: result.user.displayName || result.user.email?.split('@')[0],
+//       provider: 'google'
+//     }, {
+//       headers: { Authorization: `Bearer ${await result.user.getIdToken()}` }
+//     });
+
+//     return result;
+//   };
+
+//   return (
+//     <AuthContext.Provider value={{ currentUser, register, signInWithGoogle }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// }
