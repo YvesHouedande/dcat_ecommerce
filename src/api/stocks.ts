@@ -1,3 +1,4 @@
+// src/api/stocks.ts
 import axios from 'axios';
 import { Product, Famille, Marque, PaginatedResponse } from '../types/product';
 

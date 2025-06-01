@@ -1,3 +1,4 @@
+// src/types/product.ts
 export interface ProductImage {
   id_image: number;
   libelle_image: string;

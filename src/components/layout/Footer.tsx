@@ -8,7 +8,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Headphones,
 } from "lucide-react";
 
 const Footer: React.FC = () => {
@@ -19,8 +18,14 @@ const Footer: React.FC = () => {
           {/* Brand Column */}
           <div>
             <div className="flex items-center space-x-2 mb-6">
-              <Headphones className="h-8 w-8 text-amber-500" />
-              <span className="text-2xl font-serif font-bold">DACT SHOP</span>
+              <Link to="/" className="flex items-center space-x-2">
+                <img 
+                  src="/logo.png" 
+                  alt="DCAT Shop Logo" 
+                  className="h-8 w-auto" // Ajustez la taille selon vos besoins
+                />
+                <span className="text-2xl font-serif font-bold">Shop</span>
+              </Link>
             </div>
             <p className="text-slate-300 mb-6">
               Équipement audiovisuel haut de gamme pour les professionnels et
@@ -63,7 +68,7 @@ const Footer: React.FC = () => {
                   to="/"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
-                  Home
+                  Accueil
                 </Link>
               </li>
               <li>
@@ -71,7 +76,7 @@ const Footer: React.FC = () => {
                   to="/catalog"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
-                  Boutique
+                  Shop
                 </Link>
               </li>
               <li>
@@ -99,7 +104,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <Link
-                  to="/catalog?category=microphones"
+                  to="/catalog?familleLibelle=Audiovisuel"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
                   Audiovisuels
@@ -107,7 +112,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/catalog?category=headphones"
+                  to="/catalog?familleLibelle=Informatique"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
                   Informatiques
@@ -115,7 +120,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/catalog?category=interfaces"
+                  to="/catalog?familleLibelle=Domotique"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
                   TIC & Domotique
@@ -123,7 +128,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/catalog?category=mixers"
+                  to="/catalog?familleLibelle=Solaire"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
                   Solaires
@@ -131,7 +136,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/catalog?category=cameras"
+                  to="/catalog"
                   className="text-slate-300 hover:text-amber-500 transition-colors"
                 >
                   Autres
