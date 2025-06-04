@@ -20,7 +20,7 @@ const CatalogPage: React.FC = () => {
   const limit = 3;
 
   // Filter states
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<'newest' | 'oldest'>('newest');
