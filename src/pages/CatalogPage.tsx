@@ -438,7 +438,7 @@ const CatalogPage: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = 6;
+  const limit = 8;
 
   // Filter states
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000000]);
@@ -773,7 +773,7 @@ const CatalogPage: React.FC = () => {
             {/* Products Grid */}
             {productsData?.data && productsData.data.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {productsData.data.map((product) => (
                     <ProductCard key={product.produit.id_produit} product={product} />
                   ))}
