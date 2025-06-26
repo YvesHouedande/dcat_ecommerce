@@ -7,7 +7,7 @@ import { stocksApi } from '../api/stocks';
 import { Product } from '../types/product';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ProductCard from '../components/ui/ProductCard';
-import { toast } from 'react-toastify';
+import { toast } from 'react-toastify'; 
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
