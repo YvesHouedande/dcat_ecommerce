@@ -16,6 +16,8 @@ import { useAuth } from './context/AuthContext';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import OrderDetailsPage from './pages/OrderDetailsPage';
 import AboutPage from './pages/AboutPage'
+import ForgotPasswordPage from './pages/ForgotPassword';
+import ResetPasswordPage from './pages/ResetPassword';
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,6 +42,8 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="about" element={<AboutPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
 
 
         {/* Redirection vers la page d'accueil si la route n'existe pas */}

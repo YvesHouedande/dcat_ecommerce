@@ -1,5 +1,4 @@
-import React from "react";
-import { MapPin, Phone, Mail, Users, Award, Server, Shield, Cable, Settings, Wifi, Radio, Home, Cpu } from "lucide-react";
+import { MapPin, Phone, Mail, Users, Award, Server, Shield, Cable, Wifi, Radio, Home, Cpu } from "lucide-react";
 
 const AboutPage = () => {
   return (
@@ -32,9 +31,6 @@ const AboutPage = () => {
           </a>
           <a href="#localisation" className="whitespace-nowrap text-blue-600 hover:text-blue-800">
             Nous Trouver
-          </a>
-          <a href="#contact" className="whitespace-nowrap text-blue-600 hover:text-blue-800">
-            Contact
           </a>
         </div>
       </nav>
@@ -346,74 +342,6 @@ const AboutPage = () => {
                   loading="lazy" 
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact */}
-        <section id="contact" className="scroll-mt-20">
-          <div className="bg-blue-800 rounded-xl p-8 md:p-12 text-white">
-            <h2 className="text-3xl font-bold mb-6">Contactez-nous</h2>
-            <p className="text-blue-100 mb-8 max-w-2xl">
-              Vous avez un projet ou besoin d'informations ? Notre équipe est à votre disposition pour répondre à toutes vos questions.
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-8">
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-blue-100 mb-2">Nom complet</label>
-                  <input 
-                    type="text" 
-                    id="name" 
-                    className="w-full px-4 py-3 rounded-lg bg-blue-700 border border-blue-600 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-amber-400" 
-                    placeholder="Votre nom"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-blue-100 mb-2">Email</label>
-                  <input 
-                    type="email" 
-                    id="email" 
-                    className="w-full px-4 py-3 rounded-lg bg-blue-700 border border-blue-600 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-amber-400" 
-                    placeholder="votre@email.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-blue-100 mb-2">Message</label>
-                  <textarea 
-                    id="message" 
-                    rows={4} 
-                    className="w-full px-4 py-3 rounded-lg bg-blue-700 border border-blue-600 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-amber-400" 
-                    placeholder="Décrivez votre projet ou demande..."
-                  ></textarea>
-                </div>
-                <button 
-                  type="submit" 
-                  className="bg-amber-500 hover:bg-amber-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-                >
-                  Envoyer le message
-                </button>
-              </form>
-              
-              <div className="flex items-center justify-center">
-                <div className="bg-white/10 p-8 rounded-lg backdrop-blur-sm">
-                  <h3 className="text-xl font-semibold mb-4">Coordonnées</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <Phone className="h-5 w-5 text-amber-300 mr-3" />
-                      <span>+225 27 21 37 33 63</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Mail className="h-5 w-5 text-amber-300 mr-3" />
-                      <span>infos@dcat.ci</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MapPin className="h-5 w-5 text-amber-300 mr-3" />
-                      <span>Angré Château, BATIM II, 1er étage A108, Abidjan</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
