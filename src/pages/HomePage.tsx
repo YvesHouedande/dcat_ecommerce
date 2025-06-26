@@ -13,10 +13,10 @@ const HomePage: React.FC = () => {
   return (
     <div>
       <Hero />
-      <BenefitsSection />
       <CategoryGrid />
       <FeaturedProducts />
       <PromoSection />
+      <BenefitsSection />
     </div>
   );
 };

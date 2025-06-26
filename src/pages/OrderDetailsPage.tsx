@@ -172,7 +172,7 @@ const OrderDetailsPage: React.FC = () => {
                   <div className="col-span-6 flex items-center mb-3 sm:mb-0">
                     <div className="h-12 w-12 sm:h-16 sm:w-16 bg-slate-100 rounded-md overflow-hidden mr-3 sm:mr-4">
                       <img
-                        src={product.images[0] || '/placeholder-product.png'}
+                        src={ `${import.meta.env.VITE_API_URL}/${product.images[0]}` || '/placeholder-product.png'}
                         alt={product.designation}
                         className="h-full w-full object-cover"
                       />

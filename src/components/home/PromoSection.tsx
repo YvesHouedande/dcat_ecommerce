@@ -45,7 +45,7 @@ const PromoSection: React.FC = () => {
                 </div>
               </div>
               <div className="mt-8">
-                <Link to="/register" className="btn-secondary px-8 py-3">
+                <Link to="register" className="btn-secondary px-8 py-3">
                   Inscrivez-vous maintenant
                 </Link>
               </div>

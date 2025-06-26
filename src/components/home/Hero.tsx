@@ -109,13 +109,6 @@ const Hero: React.FC = () => {
             >
               Explorer le catalogue
             </Link>
-            <Link
-              to="/contact"
-              className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-900 px-6 py-3 rounded-md font-medium transition-colors flex items-center"
-            >
-              Demander un devis
-              <ChevronRight className="h-5 w-5 ml-1" />
-            </Link>
           </div>
         </div>
       </div>
