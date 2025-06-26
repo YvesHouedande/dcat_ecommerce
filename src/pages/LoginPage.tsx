@@ -197,18 +197,6 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember_me"
-                  name="remember_me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-900">
-                  Se souvenir de moi
-                </label>
-              </div>
-
               <div className="text-sm">
                 <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
                   Mot de passe oublié ?
@@ -229,14 +217,9 @@ const LoginPage: React.FC = () => {
 
           <div className="mt-6 text-center text-sm text-gray-600">
             <p>
-              En vous connectant, vous acceptez nos{' '}
-              <Link to="/terms" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Conditions d'utilisation
-              </Link>{' '}
-              et notre{' '}
-              <Link to="/privacy" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Politique de confidentialité
-              </Link>
+              En vous connectant, vous acceptez nos Conditions d'utilisation et notre
+              Politique de confidentialité
+     
             </p>
           </div>
         </div>

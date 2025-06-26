@@ -11,7 +11,7 @@ const NotFoundPage: React.FC = () => {
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16">
       <h1 className="text-6xl font-bold text-slate-900 mb-4">404</h1>
       <h2 className="text-2xl font-medium text-slate-700 mb-6">
-        Page Not Found
+        Page Inexistante
       </h2>
       <p className="text-slate-600 text-center max-w-md mb-8">
         La page que vous recherchez a peut-être été supprimée, son nom a

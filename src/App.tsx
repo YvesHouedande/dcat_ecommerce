@@ -15,6 +15,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import { useAuth } from './context/AuthContext';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import OrderDetailsPage from './pages/OrderDetailsPage';
+import AboutPage from './pages/AboutPage'
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,6 +39,11 @@ function App() {
         <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="about" element={<AboutPage />} />
+
+
+        {/* Redirection vers la page d'accueil si la route n'existe pas */}
+
         
         {/* Routes protégées */}
         <Route path="account" element={
@@ -55,6 +61,7 @@ function App() {
             <OrderDetailsPage />
           </ProtectedRoute>
         } />
+
         
         {/* Gestion des erreurs 404 */}
         <Route path="*" element={<NotFoundPage />} />

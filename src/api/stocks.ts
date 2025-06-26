@@ -15,6 +15,7 @@ interface ProductFilters {
   sortBy?: 'updated_at' | 'prix_produit';
   sortOrder?: 'asc' | 'desc';
   exclude?: string;
+  search?: string; // Ajout du paramètre de recherche
 }
 
 export const stocksApi = {
@@ -33,6 +34,7 @@ export const stocksApi = {
       if (filters.sortBy) params.sortBy = filters.sortBy;
       if (filters.sortOrder) params.sortOrder = filters.sortOrder;
       if (filters.exclude) params.exclude = filters.exclude;
+      if (filters.search) params.search = filters.search; // Ajout du paramètre de recherche
 
       const response = await axios.get(`${API_URL}/api/stocks/produits`, { params });
       return response.data;
@@ -41,7 +43,6 @@ export const stocksApi = {
       throw error;
     }
   },
-
   getProductById: async (id: number): Promise<Product> => {
     try {
       const response = await axios.get(`${API_URL}/api/stocks/produits/${id}`);
